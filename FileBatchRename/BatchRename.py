@@ -1,38 +1,32 @@
 import os,re,sys,argparse
 
-def rename(path,id_format,name_format):
-    filenamelist = os.listdir(root_path)
+def rename(original_path,id_pattern,newfilename_format):
+    filenamelist = os.listdir(original_path)
 
     for filename in filenamelist:
-        filepath = os.path.join(root_path,filename)
+        filepath = os.path.join(original_path,filename)
         if(os.path.isdir(filepath)):
             continue
         if(filename.startswith('.')):
             continue
-        pattern = re.compile(id_format)
+        pattern = re.compile(id_pattern)
         match = pattern.search(filename)
         if(match):
-            id = match.group(1)
-            newfilename = newfilename_format.replace('*',id) + os.path.splitext(filename)[1]
-            newfilepath = os.path.join(root_path,newfilename)
+            placeholder_count = newfilename_format.count('*')
+            id = str(int(match.group(1))).zfill(placeholder_count)
+            newfilename = re.sub('\*{' + str(placeholder_count) + '}',id,newfilename_format) + os.path.splitext(filename)[1]
+            newfilepath = os.path.join(original_path,newfilename)
             os.rename(filepath,newfilepath)
 
 try:
-    root_path = sys.argv[1]
-    id_format = sys.argv[2]
-    newfilename_format = sys.argv[3]
-    rename(root_path, id_format, newfilename_format)
+    rename(sys.argv[1], sys.argv[2], sys.argv[3])
     sys.exit()
 except Exception as ex:
     pass
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--root_path', type=str, default = None)
-parser.add_argument('--id_format', type=str, default = None)
+parser.add_argument('--original_path', type=str, default = None)
+parser.add_argument('--id_pattern', type=str, default = None)
 parser.add_argument('--newfilename_format',type=str,default = None)
 args = parser.parse_args()
-root_path = args.root_path
-id_format = args.id_format
-newfilename_format = args.newfilename_format
-
-rename(root_path,id_format,newfilename_format)
+rename(args.original_path,args.id_pattern,args.newfilename_format)
