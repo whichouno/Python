@@ -24,9 +24,22 @@ class BatchRenameGUI:
             match = pattern.search(filename)
             if (match):
                 placeholder_count = newfilename_format.count('*')
-                id = str(int(match.group(1))).zfill(placeholder_count)
-                newfilename = re.sub('\*{' + str(placeholder_count) + '}', id, newfilename_format) + \
-                              os.path.splitext(filename)[1]
+                reserve_count = newfilename_format.count('#')
+                newfilename = ''
+                if(placeholder_count == 0 and reserve_count > 0):
+                    reserve = str(match.group(1))
+                    newfilename = re.sub('\#', reserve, newfilename_format)
+                else:
+                    id = str(int(match.group(1))).zfill(placeholder_count)
+
+                    if (reserve_count > 0):
+                        reserve = str(match.group(2))
+                        newfilename = re.sub('\#', reserve, newfilename_format)
+                        newfilename = re.sub('\*{' + str(placeholder_count) + '}', id, newfilename)
+                    else:
+                        newfilename = re.sub('\*{' + str(placeholder_count) + '}', id, newfilename_format)
+
+                newfilename = newfilename + os.path.splitext(filename)[1]
                 newfilepath = os.path.join(original_path, newfilename)
                 os.rename(filepath, newfilepath)
         self.__update_listbox(self.__entry_path.get())
@@ -44,6 +57,8 @@ class BatchRenameGUI:
             self.__listbox.config(selectbackground='white')
 
     def __update_listbox(self,path):
+        if(path == '' or path is None):
+            return
         filelist = os.listdir(path)
         filelist.sort()
         os.chdir(path)
@@ -72,10 +87,7 @@ class BatchRenameGUI:
             self.__entry_path['state'] = 'readonly'#readonly or disable
 
     def __check_filte_event(self):
-        if (self.__check_filtefile.get()):
-            pass
-        else:
-            pass
+        self.__update_listbox(self.__entry_path.get())
 
     def generate_label_entry(self):
         frame = Frame(self.__top)
@@ -131,7 +143,7 @@ class BatchRenameGUI:
 def main():
     #窗口设置
     root = Tk()
-    root.title('BatchRename')
+    root.title('BatchRename V1.2')
     root.geometry('500x380+700+300')
     root.resizable(width=FALSE,height=FALSE)
     #root.wm_attributes('-topmost',1)#窗口置顶,影响opendialog
